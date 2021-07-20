@@ -57,7 +57,7 @@ void Point::Set(Point &p) {
   y.Set(&p.y);
 }
 
-bool Point::isZero() {
+bool Point::isZero() const {
   return x.IsZero() && y.IsZero();
 }
 
@@ -71,11 +71,11 @@ void Point::Reduce() {
 
 }
 
-bool Point::equals(Point &p) {
+bool Point::equals(Point &p) const {
   return x.IsEqual(&p.x) && y.IsEqual(&p.y) && z.IsEqual(&p.z);
 }
 
-std::string Point::toString() {
+std::string Point::toString() const {
 
 	char buffer[163];
 	sprintf_s(buffer, 163, "04%064s%064s", x.GetBase16().c_str(), y.GetBase16().c_str());

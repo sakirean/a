@@ -55,11 +55,12 @@ VanitySearch [-check] [-v] [-u] [-b] [-c] [-gpu] [-stop] [-i inputfile]
  -cp privKey: Compute public key (privKey in hex hormat)
  -kp: Generate key pair
  -rp privkey partialkeyfile: Reconstruct final private key(s) from partial key(s) info.
+ -sk startPrivKey: Start the search with a privKey
  -sp startPubKey: Start the search with a pubKey (for private key splitting)
  -r rekey: Rekey interval in MegaKey, default is disabled
 ```
 
-Exemple (Windows, Intel Core i7-4770 3.4GHz 8 multithreaded cores, GeForce GTX 1050 Ti):
+Example (Windows, Intel Core i7-4770 3.4GHz 8 multithreaded cores, GeForce GTX 1050 Ti):
 
 ```
 C:\C++\VanitySearch\x64\Release>VanitySearch.exe -stop -gpu 1TryMe
@@ -105,6 +106,23 @@ Pub Addr: bc1quantum898l8mx5pkvq2x250kkqsj7enpx3u4yt
 Priv (WIF): p2wpkh:L37xBVcFGeAZ9Tii7igqXBWmfiBhiwwiKQmchNXPV2LNREXQDLCp
 Priv (HEX): 0xB00FD8CDA85B11D4744C09E65C527D35E2B1D19095CFCA0BF2E48186F31979C2
 ```
+
+```
+d:\VanitySearchPublicKey\x64\Release>VanitySearch.exe -p DEADBEEF
+VanitySearch v1.19
+Difficulty: 1048576
+Search: DEADBEEF [PublicKeys]
+Start Tue Jul 20 15:08:59 2021
+Base Key: 402BA82095A5008EBE76312FB280F67B25804DEC5150054DF29AC486FC2D1271
+Number of CPU thread: 4
+[131.41 Mkey/s][GPU 0.00 Mkey/s][Total 2^34.61][Prob 100.0%][99% in 00:00:00][Found 0]
+PubAddress: 1EWqe55j8txm9jXCpEHHT7Fnn3prt38Qno
+PubKey: 04DEADBEEF3BB2A238ABD9B34FA76BC68AF830F5FFE28E69BD7D4F1B7B9825365A72492A91AB4A07D4802C584F8FFD25D18DE3A9F76925AC10EAA5008A3773CE12
+Priv (WIF): p2pkh:5JJYjPcwD22oe5GjUshFFEpqtKfQ2ntD8VSuKDq7uR4G86faHZi
+Priv (HEX): 0x402BA82095A5008EBE76312FB280F67B25804DEC5150054EF29AC4873D2B9F6D
+[129.49 Mkey/s][GPU 0.00 Mkey/s][Total 2^36.45][Prob 100.0%][99% in 00:00:00][Found 1]
+```
+
 
 # Generate a vanity address for a third party using split-key
 

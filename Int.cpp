@@ -426,7 +426,7 @@ bool Int::IsLowerOrEqual(Int *a) {
 
 }
 
-bool Int::IsEqual(Int *a) {
+bool Int::IsEqual(Int *a) const {
 
 return
 
@@ -444,11 +444,11 @@ return
 
 }
 
-bool Int::IsOne() {
+bool Int::IsOne() const {
   return IsEqual(&_ONE);
 }
 
-bool Int::IsZero() {
+bool Int::IsZero() const {
 
 #if NB64BLOCK > 5
   return (bits64[8] | bits64[7] | bits64[6] | bits64[5] | bits64[4] | bits64[3] | bits64[2] | bits64[1] | bits64[0]) == 0;
@@ -1203,13 +1203,13 @@ void  Int::SetBase16(char *value) {
 
 // ------------------------------------------------
 
-std::string Int::GetBase10() {
+std::string Int::GetBase10() const {
   return GetBaseN(10,"0123456789");
 }
 
 // ------------------------------------------------
 
-std::string Int::GetBase16() {
+std::string Int::GetBase16() const {
   return GetBaseN(16,"0123456789ABCDEF");
 }
 
@@ -1282,7 +1282,7 @@ void  Int::SetBaseN(int n,char *charset,char *value) {
 
 // ------------------------------------------------
 
-std::string Int::GetBaseN(int n,char *charset) {
+std::string Int::GetBaseN(int n, const char *charset) const {
 
   std::string ret;
 
@@ -1325,7 +1325,7 @@ std::string Int::GetBaseN(int n,char *charset) {
 // ------------------------------------------------
 
 
-int Int::GetBit(uint32_t n) {
+int Int::GetBit(uint32_t n) const {
 
   uint32_t byte = n>>5;
   uint32_t bit  = n&31;
@@ -1336,7 +1336,7 @@ int Int::GetBit(uint32_t n) {
 
 // ------------------------------------------------
 
-std::string Int::GetBase2() {
+std::string Int::GetBase2() const {
 
   char ret[1024];
   int k=0;

@@ -40,7 +40,7 @@ Point _2Gn;
 
 VanitySearch::VanitySearch(Secp256K1* secp, vector<std::string>& inputPrefixes, string seed, int searchMode,
 	bool useGpu, bool stop, string outputFile, bool useSSE, uint32_t maxFound,
-	uint64_t rekey, bool caseSensitive, Point& startPubKey, bool paranoiacSeed)
+	uint64_t rekey, bool caseSensitive,const Point& startPubKey, bool paranoiacSeed, const Int& startKey)
 	:inputPrefixes(inputPrefixes) {
 
 	this->secp = secp;
@@ -52,6 +52,7 @@ VanitySearch::VanitySearch(Secp256K1* secp, vector<std::string>& inputPrefixes, 
 	this->nbGPUThread = 0;
 	this->maxFound = maxFound;
 	this->rekey = rekey;
+	this->startKey = startKey;
 	this->startPubKey = startPubKey;
 	this->hasPattern = false;
 	this->caseSensitive = caseSensitive;
@@ -302,24 +303,27 @@ VanitySearch::VanitySearch(Secp256K1* secp, vector<std::string>& inputPrefixes, 
 	beta2.SetBase16("851695d49a83f8ef919bb86153cbcb16630fb68aed0a766a3ec693d68e6afa40");
 	lambda2.SetBase16("ac9c52b33fa3cf1f5ad9e3fd77ed9ba4a880b9fc8ec739c2e0cfc810b51283ce");
 
-	// Seed
-	if (seed.length() == 0) {
-		// Default seed
-		seed = Timer::getSeed(32);
-	}
+	if (this->startKey.IsZero())
+	{
 
-	if (paranoiacSeed) {
-		seed += Timer::getSeed(32);
-	}
+		// Seed
+		if (seed.length() == 0) {
+			// Default seed
+			seed = Timer::getSeed(32);
+		}
 
-	// Protect seed against "seed search attack" using pbkdf2_hmac_sha512
-	string salt = "VanitySearch";
-	unsigned char hseed[64];
-	pbkdf2_hmac_sha512(hseed, 64, (const uint8_t*)seed.c_str(), seed.length(),
-		(const uint8_t*)salt.c_str(), salt.length(),
-		2048);
-	startKey.SetInt32(0);
-	sha256(hseed, 64, (unsigned char*)startKey.bits64);
+		if (paranoiacSeed) {
+			seed += Timer::getSeed(32);
+		}
+
+		// Protect seed against "seed search attack" using pbkdf2_hmac_sha512
+		string salt = "VanitySearch";
+		unsigned char hseed[64];
+		pbkdf2_hmac_sha512(hseed, 64, (const uint8_t*)seed.c_str(), seed.length(),
+			(const uint8_t*)salt.c_str(), salt.length(),
+			2048);
+		sha256(hseed, 64, (unsigned char*)this->startKey.bits64);
+	}
 
 	char* ctimeBuff;
 	time_t now = time(NULL);
@@ -330,7 +334,7 @@ VanitySearch::VanitySearch(Secp256K1* secp, vector<std::string>& inputPrefixes, 
 		printf("Base Key: Randomly changed every %.0f Mkeys\n", (double)rekey);
 	}
 	else {
-		printf("Base Key: %s\n", startKey.GetBase16().c_str());
+		printf("Base Key: %s\n", this->startKey.GetBase16().c_str());
 	}
 
 }

@@ -87,9 +87,9 @@ public:
   bool IsGreaterOrEqual(Int *a);
   bool IsLowerOrEqual(Int *a);
   bool IsLower(Int *a);
-  bool IsEqual(Int *a);
-  bool IsZero();
-  bool IsOne();
+  bool IsEqual(Int *a) const;
+  bool IsZero() const;
+  bool IsOne() const;
   bool IsStrictPositive();
   bool IsPositive();
   bool IsNegative();
@@ -167,15 +167,15 @@ public:
 
   // Getter
   uint32_t GetInt32();
-  int GetBit(uint32_t n);
+  int GetBit(uint32_t n) const;
   unsigned char GetByte(int n);
   void Get32Bytes(unsigned char *buff) const;
 
   // To String
-  std::string GetBase2();
-  std::string GetBase10();
-  std::string GetBase16();
-  std::string GetBaseN(int n,char *charset);
+  std::string GetBase2() const;
+  std::string GetBase10() const;
+  std::string GetBase16() const;
+  std::string GetBaseN(int n, const char *charset) const;
   std::string GetBlockStr();
   std::string GetC64Str(int nbDigit);
 

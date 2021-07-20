@@ -75,7 +75,7 @@ public:
 
 	VanitySearch(Secp256K1* secp, std::vector<std::string>& prefix, std::string seed, int searchMode,
 		bool useGpu, bool stop, std::string outputFile, bool useSSE, uint32_t maxFound, uint64_t rekey,
-		bool caseSensitive, Point& startPubKey, bool paranoiacSeed);
+		bool caseSensitive, const Point& startPubKey, bool paranoiacSeed, const Int& startKey);
 
 	void Search(int nbThread, std::vector<int> gpuId, std::vector<int> gridSize);
 	void FindKeyCPU(TH_PARAM* p);
