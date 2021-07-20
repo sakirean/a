@@ -28,11 +28,15 @@
 #define BISIZE 256
 
 #if BISIZE==256
-  #define NB64BLOCK 5
+  #define NB64BLOCK  5
   #define NB32BLOCK 10
+  #define NB16BLOCK 20
+  #define NB08BLOCK 40
 #elif BISIZE==512
-  #define NB64BLOCK 9
+  #define NB64BLOCK  9
   #define NB32BLOCK 18
+  #define NB16BLOCK 36
+  #define NB08BLOCK 72
 #else
   #error Unsuported size
 #endif
@@ -44,7 +48,7 @@ public:
   Int();
   Int(int64_t i64);
   Int(uint64_t u64);
-  Int(Int *a);
+  Int(const Int *a);
 
   // Op
   void Add(uint64_t a);
@@ -89,8 +93,8 @@ public:
   bool IsStrictPositive();
   bool IsPositive();
   bool IsNegative();
-  bool IsEven();
-  bool IsOdd();
+  bool IsEven() const;
+  bool IsOdd() const;
   bool IsProbablePrime();
 
 
@@ -149,7 +153,7 @@ public:
 
   // Setter
   void SetInt32(uint32_t value);
-  void Set(Int *a);
+  void Set(const Int *a);
   void SetBase10(char *value);
   void SetBase16(char *value);
   void SetBaseN(int n,char *charset,char *value);
@@ -165,7 +169,7 @@ public:
   uint32_t GetInt32();
   int GetBit(uint32_t n);
   unsigned char GetByte(int n);
-  void Get32Bytes(unsigned char *buff);
+  void Get32Bytes(unsigned char *buff) const;
 
   // To String
   std::string GetBase2();
@@ -188,7 +192,9 @@ public:
   };
   */
   union {
-    uint32_t bits[NB32BLOCK];
+    uint8_t  bits08[NB08BLOCK];
+    uint16_t bits16[NB16BLOCK];
+    uint32_t bits32[NB32BLOCK];
     uint64_t bits64[NB64BLOCK];
   };
 

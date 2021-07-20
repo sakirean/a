@@ -24,8 +24,9 @@
 #define SEARCH_COMPRESSED 0
 #define SEARCH_UNCOMPRESSED 1
 #define SEARCH_BOTH 2
+#define SEARCH_PUBLICKEYS 3
 
-static const char *searchModes[] = {"Compressed","Uncompressed","Compressed or Uncompressed"};
+static const char *searchModes[] = {"Compressed","Uncompressed","Compressed or Uncompressed", "PublicKeys"};
 
 // Number of key per thread (must be a multiple of GRP_SIZE) per kernel call
 #define STEP_SIZE 1024

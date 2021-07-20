@@ -42,6 +42,7 @@ void printUsage() {
   printf(" -v: Print version\n");
   printf(" -u: Search uncompressed addresses\n");
   printf(" -b: Search both uncompressed or compressed addresses\n");
+  printf(" -p: Search public keys\n");
   printf(" -c: Case unsensitive search\n");
   printf(" -gpu: Enable gpu calculation\n");
   printf(" -stop: Stop when all prefixes are found\n");
@@ -493,6 +494,9 @@ int main(int argc, char* argv[]) {
     } else if (strcmp(argv[a], "-b") == 0) {
       searchMode = SEARCH_BOTH;
       a++;
+    } else if (strcmp(argv[a], "-p") == 0) {
+        searchMode = SEARCH_PUBLICKEYS;
+        a++;
     } else if (strcmp(argv[a], "-nosse") == 0) {
       sse = false;
       a++;

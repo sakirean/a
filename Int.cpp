@@ -33,7 +33,7 @@ Int _ONE((uint64_t)1);
 Int::Int() {
 }
 
-Int::Int(Int *a) {
+Int::Int(const Int *a) {
   if(a) Set(a);
   else CLEAR();
 }
@@ -72,7 +72,7 @@ void Int::CLEARFF() {
 
 // ------------------------------------------------
 
-void Int::Set(Int *a) {
+void Int::Set(const Int *a) {
 
   for (int i = 0; i<NB64BLOCK; i++)
   	bits64[i] = a->bits64[i];
@@ -464,21 +464,21 @@ bool Int::IsZero() {
 void Int::SetInt32(uint32_t value) {
 
   CLEAR();
-  bits[0]=value;
+  bits32[0]=value;
 
 }
 
 // ------------------------------------------------
 
 uint32_t Int::GetInt32() {
-  return bits[0];
+  return bits32[0];
 }
 
 // ------------------------------------------------
 
 unsigned char Int::GetByte(int n) {
   
-  unsigned char *bbPtr = (unsigned char *)bits;
+  unsigned char *bbPtr = (unsigned char *)bits32;
   return bbPtr[n];
 
 }
@@ -494,7 +494,7 @@ void Int::Set32Bytes(unsigned char *bytes) {
 
 }
 
-void Int::Get32Bytes(unsigned char *buff) {
+void Int::Get32Bytes(unsigned char *buff) const {
 
   uint64_t *ptr = (uint64_t *)buff;
   ptr[3] = _byteswap_uint64(bits64[0]);
@@ -508,7 +508,7 @@ void Int::Get32Bytes(unsigned char *buff) {
 
 void Int::SetByte(int n,unsigned char byte) {
 
-	unsigned char *bbPtr = (unsigned char *)bits;
+	unsigned char *bbPtr = (unsigned char *)bits32;
 	bbPtr[n] = byte;
 
 }
@@ -516,7 +516,7 @@ void Int::SetByte(int n,unsigned char byte) {
 // ------------------------------------------------
 
 void Int::SetDWord(int n,uint32_t b) {
-  bits[n] = b;
+  bits32[n] = b;
 }
 
 // ------------------------------------------------
@@ -620,14 +620,14 @@ bool Int::IsStrictPositive() {
 
 // ------------------------------------------------
 
-bool Int::IsEven() {
-  return (bits[0] & 0x1) == 0;
+bool Int::IsEven() const {
+  return (bits32[0] & 0x1) == 0;
 }
 
 // ------------------------------------------------
 
-bool Int::IsOdd() {
-  return (bits[0] & 0x1) == 1;
+bool Int::IsOdd() const {
+  return (bits32[0] & 0x1) == 1;
 }
 
 // ------------------------------------------------
@@ -654,9 +654,9 @@ void Int::Neg() {
 void Int::ShiftL32Bit() {
 
   for(int i=NB32BLOCK-1;i>0;i--) {
-    bits[i]=bits[i-1];
+    bits32[i]=bits32[i-1];
   }
-  bits[0]=0;
+  bits32[0]=0;
 
 }
 
@@ -711,12 +711,12 @@ void Int::ShiftL(uint32_t n) {
 void Int::ShiftR32Bit() {
 
   for(int i=0;i<NB32BLOCK-1;i++) {
-    bits[i]=bits[i+1];
+    bits32[i]=bits32[i+1];
   }
-  if(((int32_t)bits[NB32BLOCK-2])<0)
-    bits[NB32BLOCK-1] = 0xFFFFFFFF;
+  if(((int32_t)bits32[NB32BLOCK-2])<0)
+    bits32[NB32BLOCK-1] = 0xFFFFFFFF;
   else
-    bits[NB32BLOCK-1]=0;
+    bits32[NB32BLOCK-1]=0;
 
 }
 
@@ -890,7 +890,7 @@ double Int::ToDouble() {
   double sum = 0;
   double pw32 = pow(2.0,32.0);
   for(int i=0;i<NB32BLOCK;i++) {
-    sum += (double)(bits[i]) * base;
+    sum += (double)(bits32[i]) * base;
     base *= pw32;
   }
 
@@ -918,7 +918,7 @@ int Int::GetBitLength() {
 int Int::GetSize() {
 
   int i=NB32BLOCK-1;
-  while(i>0 && bits[i]==0) i--;
+  while(i>0 && bits32[i]==0) i--;
   return i+1;
 
 }
@@ -970,7 +970,7 @@ int Int::GetLowestBit() {
 void Int::MaskByte(int n) {
 
   for (int i = n; i < NB32BLOCK; i++)
-	  bits[i] = 0;
+	  bits32[i] = 0;
 
 }
 
@@ -995,8 +995,8 @@ void Int::Rand(int nbit) {
 	mask = (mask << leftBit) - 1;
 	uint32_t i=0;
 	for(;i<nb;i++)
-		bits[i]=rndl();
-	bits[i]=rndl()&mask;
+		bits32[i]=rndl();
+	bits32[i]=rndl()&mask;
 
 }
 
@@ -1221,7 +1221,7 @@ std::string Int::GetBlockStr() {
 	char bStr[256];
 	tmp[0] = 0;
 	for (int i = NB32BLOCK-3; i>=0 ; i--) {
-	  sprintf(bStr, "%08X", bits[i]);
+	  sprintf(bStr, "%08X", bits32[i]);
 	  strcat(tmp, bStr);
 	  if(i!=0) strcat(tmp, " ");
 	}
@@ -1330,7 +1330,7 @@ int Int::GetBit(uint32_t n) {
   uint32_t byte = n>>5;
   uint32_t bit  = n&31;
   uint32_t mask = 1 << bit;
-  return (bits[byte] & mask)!=0;
+  return (bits32[byte] & mask)!=0;
 
 }
 
@@ -1344,7 +1344,7 @@ std::string Int::GetBase2() {
   for(int i=0;i<NB32BLOCK-1;i++) {
     unsigned int mask=0x80000000;
     for(int j=0;j<32;j++) {
-      if(bits[i]&mask) ret[k]='1';
+      if(bits32[i]&mask) ret[k]='1';
       else             ret[k]='0';
       k++;
       mask=mask>>1;

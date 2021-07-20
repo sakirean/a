@@ -77,10 +77,7 @@ bool Point::equals(Point &p) {
 
 std::string Point::toString() {
 
-  std::string ret;
-  ret  = "X=" + x.GetBase16() + "\n";
-  ret += "Y=" + y.GetBase16() + "\n";
-  ret += "Z=" + z.GetBase16() + "\n";
-  return ret;
-
+	char buffer[163];
+	sprintf_s(buffer, 163, "04%064s%064s", x.GetBase16().c_str(), y.GetBase16().c_str());
+	return std::string(buffer);
 }

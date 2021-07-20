@@ -274,15 +274,15 @@ Int Secp256K1::DecodePrivateKey(char *key,bool *compressed) {
 }
 
 #define KEYBUFFCOMP(buff,p) \
-(buff)[0] = ((p).x.bits[7] >> 8) | ((uint32_t)(0x2 + (p).y.IsOdd()) << 24); \
-(buff)[1] = ((p).x.bits[6] >> 8) | ((p).x.bits[7] <<24); \
-(buff)[2] = ((p).x.bits[5] >> 8) | ((p).x.bits[6] <<24); \
-(buff)[3] = ((p).x.bits[4] >> 8) | ((p).x.bits[5] <<24); \
-(buff)[4] = ((p).x.bits[3] >> 8) | ((p).x.bits[4] <<24); \
-(buff)[5] = ((p).x.bits[2] >> 8) | ((p).x.bits[3] <<24); \
-(buff)[6] = ((p).x.bits[1] >> 8) | ((p).x.bits[2] <<24); \
-(buff)[7] = ((p).x.bits[0] >> 8) | ((p).x.bits[1] <<24); \
-(buff)[8] = 0x00800000 | ((p).x.bits[0] <<24); \
+(buff)[0] = ((p).x.bits32[7] >> 8) | ((uint32_t)(0x2 + (p).y.IsOdd()) << 24); \
+(buff)[1] = ((p).x.bits32[6] >> 8) | ((p).x.bits32[7] <<24); \
+(buff)[2] = ((p).x.bits32[5] >> 8) | ((p).x.bits32[6] <<24); \
+(buff)[3] = ((p).x.bits32[4] >> 8) | ((p).x.bits32[5] <<24); \
+(buff)[4] = ((p).x.bits32[3] >> 8) | ((p).x.bits32[4] <<24); \
+(buff)[5] = ((p).x.bits32[2] >> 8) | ((p).x.bits32[3] <<24); \
+(buff)[6] = ((p).x.bits32[1] >> 8) | ((p).x.bits32[2] <<24); \
+(buff)[7] = ((p).x.bits32[0] >> 8) | ((p).x.bits32[1] <<24); \
+(buff)[8] = 0x00800000 | ((p).x.bits32[0] <<24); \
 (buff)[9] = 0; \
 (buff)[10] = 0; \
 (buff)[11] = 0; \
@@ -292,23 +292,23 @@ Int Secp256K1::DecodePrivateKey(char *key,bool *compressed) {
 (buff)[15] = 0x108;
 
 #define KEYBUFFUNCOMP(buff,p) \
-(buff)[0] = ((p).x.bits[7] >> 8) | 0x04000000; \
-(buff)[1] = ((p).x.bits[6] >> 8) | ((p).x.bits[7] <<24); \
-(buff)[2] = ((p).x.bits[5] >> 8) | ((p).x.bits[6] <<24); \
-(buff)[3] = ((p).x.bits[4] >> 8) | ((p).x.bits[5] <<24); \
-(buff)[4] = ((p).x.bits[3] >> 8) | ((p).x.bits[4] <<24); \
-(buff)[5] = ((p).x.bits[2] >> 8) | ((p).x.bits[3] <<24); \
-(buff)[6] = ((p).x.bits[1] >> 8) | ((p).x.bits[2] <<24); \
-(buff)[7] = ((p).x.bits[0] >> 8) | ((p).x.bits[1] <<24); \
-(buff)[8] = ((p).y.bits[7] >> 8) | ((p).x.bits[0] <<24); \
-(buff)[9] = ((p).y.bits[6] >> 8) | ((p).y.bits[7] <<24); \
-(buff)[10] = ((p).y.bits[5] >> 8) | ((p).y.bits[6] <<24); \
-(buff)[11] = ((p).y.bits[4] >> 8) | ((p).y.bits[5] <<24); \
-(buff)[12] = ((p).y.bits[3] >> 8) | ((p).y.bits[4] <<24); \
-(buff)[13] = ((p).y.bits[2] >> 8) | ((p).y.bits[3] <<24); \
-(buff)[14] = ((p).y.bits[1] >> 8) | ((p).y.bits[2] <<24); \
-(buff)[15] = ((p).y.bits[0] >> 8) | ((p).y.bits[1] <<24); \
-(buff)[16] = 0x00800000 | ((p).y.bits[0] <<24); \
+(buff)[0] = ((p).x.bits32[7] >> 8) | 0x04000000; \
+(buff)[1] = ((p).x.bits32[6] >> 8) | ((p).x.bits32[7] <<24); \
+(buff)[2] = ((p).x.bits32[5] >> 8) | ((p).x.bits32[6] <<24); \
+(buff)[3] = ((p).x.bits32[4] >> 8) | ((p).x.bits32[5] <<24); \
+(buff)[4] = ((p).x.bits32[3] >> 8) | ((p).x.bits32[4] <<24); \
+(buff)[5] = ((p).x.bits32[2] >> 8) | ((p).x.bits32[3] <<24); \
+(buff)[6] = ((p).x.bits32[1] >> 8) | ((p).x.bits32[2] <<24); \
+(buff)[7] = ((p).x.bits32[0] >> 8) | ((p).x.bits32[1] <<24); \
+(buff)[8] = ((p).y.bits32[7] >> 8) | ((p).x.bits32[0] <<24); \
+(buff)[9] = ((p).y.bits32[6] >> 8) | ((p).y.bits32[7] <<24); \
+(buff)[10] = ((p).y.bits32[5] >> 8) | ((p).y.bits32[6] <<24); \
+(buff)[11] = ((p).y.bits32[4] >> 8) | ((p).y.bits32[5] <<24); \
+(buff)[12] = ((p).y.bits32[3] >> 8) | ((p).y.bits32[4] <<24); \
+(buff)[13] = ((p).y.bits32[2] >> 8) | ((p).y.bits32[3] <<24); \
+(buff)[14] = ((p).y.bits32[1] >> 8) | ((p).y.bits32[2] <<24); \
+(buff)[15] = ((p).y.bits32[0] >> 8) | ((p).y.bits32[1] <<24); \
+(buff)[16] = 0x00800000 | ((p).y.bits32[0] <<24); \
 (buff)[17] = 0; \
 (buff)[18] = 0; \
 (buff)[19] = 0; \
@@ -548,7 +548,7 @@ std::string Secp256K1::GetPublicKeyHex(bool compressed, Point &pubKey) {
 
 }
 
-void Secp256K1::GetHash160(int type, bool compressed, Point &pubKey, unsigned char *hash) {
+void Secp256K1::GetHash160(int type, bool compressed, const Point &pubKey, unsigned char *hash) {
 
   unsigned char shapk[64];
 
@@ -736,7 +736,7 @@ std::string Secp256K1::GetAddress(int type, bool compressed,unsigned char *hash1
 
 }
 
-std::string Secp256K1::GetAddress(int type, bool compressed, Point &pubKey) {
+std::string Secp256K1::GetAddress(int type, bool compressed, const Point &pubKey) {
 
   unsigned char address[25];
 

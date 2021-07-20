@@ -1,4 +1,4 @@
-# VanitySearch
+# VanitySearch +PublicKeys
 
 VanitySearch is a bitcoin address prefix finder. If you want to generate safe private keys, use the -s option to enter your passphrase which will be used for generating a base key as for BIP38 standard (*VanitySearch.exe -s "My PassPhrase" 1MyPrefix*). You can also use *VanitySearch.exe -ps "My PassPhrase"* which will add a crypto secure seed to your passphrase.\
 VanitySearch may not compute a good grid size for your GPU, so try different values using -g option in order to get the best performances. If you want to use GPUs and CPUs together, you may have best performances by keeping one CPU core for handling GPU(s)/CPU exchanges (use -t option to set the number of CPU threads).
@@ -24,7 +24,7 @@ VanitySearch may not compute a good grid size for your GPU, so try different val
 
 # Usage
 
-You can downlad latest release from https://github.com/JeanLucPons/VanitySearch/releases
+You can download latest release from https://github.com/bojlahg/VanitySearchPublicKey/releases
 
 ```
 VanitySearch [-check] [-v] [-u] [-b] [-c] [-gpu] [-stop] [-i inputfile]
@@ -37,6 +37,7 @@ VanitySearch [-check] [-v] [-u] [-b] [-c] [-gpu] [-stop] [-i inputfile]
  -v: Print version
  -u: Search uncompressed addresses
  -b: Search both uncompressed or compressed addresses
+ -p: Search public keys
  -c: Case unsensitive search
  -gpu: Enable gpu calculation
  -stop: Stop when all prefixes are found
