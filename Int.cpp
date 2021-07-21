@@ -1482,7 +1482,18 @@ void Int::Div(const Int& a, Int* mod)
 	uint32_t qSize = tSize - dSize + 1;
 
 	// D1 normalize the divisor (d!=0)
-	uint32_t shift = (uint32_t)LZC(d.bits64[dSize - 1]);
+	uint32_t shift;
+	if (lzcntSupported)
+	{
+		shift = (uint32_t)LZC(d.bits64[dSize - 1]);
+	}
+	else
+	{
+		unsigned long idx = 0;
+		_BitScanReverse64(&idx, d.bits64[dSize - 1]);
+		shift = 64 - (idx + 1);
+	}
+
 	d.ShiftL(shift);
 	rem.ShiftL(shift);
 
