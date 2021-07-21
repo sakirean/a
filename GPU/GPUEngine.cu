@@ -626,7 +626,7 @@ bool GPUEngine::CheckHash(uint8_t *h, vector<ITEM>& found,int tid,int incr,int e
 
 }
 
-bool GPUEngine::Check(Secp256K1 *secp) {
+bool GPUEngine::Check() {
 
   uint8_t h[20];
   int i = 0;
@@ -725,10 +725,10 @@ bool GPUEngine::Check(Secp256K1 *secp) {
   memset(nbFoundCPU, 0, sizeof(nbFoundCPU));
   for (int i = 0; i < nbThread; i++) {
     k.Rand(256);
-    p[i] = secp->ComputePublicKey(&k);
+    p[i] = Secp256K1::ComputePublicKey(k);
     // Group starts at the middle
     k.Add((uint64_t)GRP_SIZE/2);
-    p2[i] = secp->ComputePublicKey(&k);
+    p2[i] = Secp256K1::ComputePublicKey(k);
   }
 
   std::vector<prefix_t> prefs;
@@ -760,24 +760,24 @@ bool GPUEngine::Check(Secp256K1 *secp) {
       pt = p[j];
       p1 = p[j];
       p2 = p[j];
-      p1.x.ModMulK1(&beta);
-      p2.x.ModMulK1(&beta2);
-      p[j] = secp->NextKey(p[j]);
+      p1.x.ModMulK1(beta);
+      p2.x.ModMulK1(beta2);
+      p[j] = Secp256K1::NextKey(p[j]);
 
       // Point and endo
-      secp->GetHash160(P2PKH, searchComp, pt, h);
+      Secp256K1::GetHash160(P2PKH, searchComp, pt, h);
       prefix_t pr = *(prefix_t *)h;
       if (pr == 0xFEFE || pr == 0x1234) {
 	      nbFoundCPU[0]++;
         ok &= CheckHash(h,found, j, i, 0, nbOK + 0);
       }
-      secp->GetHash160(P2PKH, searchComp, p1, h);
+      Secp256K1::GetHash160(P2PKH, searchComp, p1, h);
       pr = *(prefix_t *)h;
       if (pr == 0xFEFE || pr == 0x1234) {
         nbFoundCPU[1]++;
         ok &= CheckHash(h, found, j, i, 1, nbOK + 1);
       }
-      secp->GetHash160(P2PKH, searchComp, p2, h);
+      Secp256K1::GetHash160(P2PKH, searchComp, p2, h);
       pr = *(prefix_t *)h;
       if (pr == 0xFEFE || pr == 0x1234) {
         nbFoundCPU[2]++;
@@ -789,19 +789,19 @@ bool GPUEngine::Check(Secp256K1 *secp) {
       p1.y.ModNeg();
       p2.y.ModNeg();
 
-      secp->GetHash160(P2PKH, searchComp, pt, h);
+      Secp256K1::GetHash160(P2PKH, searchComp, pt, h);
       pr = *(prefix_t *)h;
       if (pr == 0xFEFE || pr == 0x1234) {
         nbFoundCPU[3]++;
         ok &= CheckHash(h, found, j, -i, 0, nbOK + 3);
       }
-      secp->GetHash160(P2PKH, searchComp, p1, h);
+      Secp256K1::GetHash160(P2PKH, searchComp, p1, h);
       pr = *(prefix_t *)h;
       if (pr == 0xFEFE || pr == 0x1234) {
         nbFoundCPU[4]++;
         ok &= CheckHash(h, found, j, -i, 1, nbOK + 4);
       }
-      secp->GetHash160(P2PKH, searchComp, p2, h);
+      Secp256K1::GetHash160(P2PKH, searchComp, p2, h);
       pr = *(prefix_t *)h;
       if (pr == 0xFEFE || pr == 0x1234) {
         nbFoundCPU[5]++;

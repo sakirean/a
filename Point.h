@@ -24,22 +24,42 @@ class Point {
 
 public:
 
-  Point();
-  Point(Int *cx,Int *cy,Int *cz);
-  Point(Int *cx, Int *cz);
-  Point(const Point &p);
-  ~Point();
-  bool isZero() const;
-  bool equals(Point &p) const;
-  void Set(Point &p);
-  void Set(Int *cx, Int *cy,Int *cz);
-  void Clear();
-  void Reduce();
-  std::string toString() const;
+	Point();
+	Point(const char* str);
+	Point(const std::string &str);
+	Point(const Int& cx, const Int& cy, const Int& cz);
+	Point(const Int& cx, const Int& cz);
+	Point(const Point& p);
+	~Point();
+	bool isZero() const;
+	bool equals(const Point& p) const;
+	void Set(const Point& p);
+	void Set(const Int& cx, const Int& cy, const Int& cz);
+	void Clear();
+	void Reduce();
+	std::string toString() const;
+	std::string toStringSeparate() const;
 
-  Int x;
-  Int y;
-  Int z;
+
+	void Add(const Point& p);
+	void Sub(const Point& p);
+	void Double();
+	void Mul(const Int& s);
+	void Div(const Int& s);
+
+	void AddDirect(const Point& p);
+	void SubDirect(const Point& p);
+	void DoubleDirect();
+	void MulDirect(const Int& s);
+	void DivDirect(const Int& s);
+	
+
+	Int x;
+	Int y;
+	Int z;
+
+	// Operators
+	bool operator==(const Point& r) const;
 
 };
 

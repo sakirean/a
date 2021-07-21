@@ -38,12 +38,11 @@ Point _2Gn;
 
 // ----------------------------------------------------------------------------
 
-VanitySearch::VanitySearch(Secp256K1* secp, vector<std::string>& inputPrefixes, string seed, int searchMode,
+VanitySearch::VanitySearch(vector<std::string>& inputPrefixes, string seed, int searchMode,
 	bool useGpu, bool stop, string outputFile, bool useSSE, uint32_t maxFound,
 	uint64_t rekey, bool caseSensitive,const Point& startPubKey, bool paranoiacSeed, const Int& startKey)
 	:inputPrefixes(inputPrefixes) {
 
-	this->secp = secp;
 	this->searchMode = searchMode;
 	this->useGpu = useGpu;
 	this->stopWhenFound = stop;
@@ -282,16 +281,16 @@ VanitySearch::VanitySearch(Secp256K1* secp, vector<std::string>& inputPrefixes, 
 
 	// Compute Generator table G[n] = (n+1)*G
 
-	Point g = secp->G;
+	Point g = Secp256K1::G;
 	Gn[0] = g;
-	g = secp->DoubleDirect(g);
+	g = Secp256K1::DoubleDirect(g);
 	Gn[1] = g;
 	for (int i = 2; i < CPU_GRP_SIZE / 2; i++) {
-		g = secp->AddDirect(g, secp->G);
+		g = Secp256K1::AddDirect(g, Secp256K1::G);
 		Gn[i] = g;
 	}
 	// _2Gn = CPU_GRP_SIZE*G
-	_2Gn = secp->DoubleDirect(Gn[CPU_GRP_SIZE / 2 - 1]);
+	_2Gn = Secp256K1::DoubleDirect(Gn[CPU_GRP_SIZE / 2 - 1]);
 
 	// Constant for endomorphism
 	// if a is a nth primitive root of unity, a^-1 is also a nth primitive root.
@@ -846,13 +845,13 @@ void VanitySearch::updateFound() {
 
 bool VanitySearch::checkPrivKey(string addr, const Int& key, int32_t incr, int endomorphism, bool mode) {
 
-	Int k(&key);
+	Int k(key);
 	Point sp = startPubKey;
 
 	if (incr < 0) {
 		k.Add((uint64_t)(-incr));
 		k.Neg();
-		k.Add(&secp->order);
+		k.Add(Secp256K1::order);
 		if (startPubKeySpecified) sp.y.ModNeg();
 	}
 	else {
@@ -862,31 +861,31 @@ bool VanitySearch::checkPrivKey(string addr, const Int& key, int32_t incr, int e
 	// Endomorphisms
 	switch (endomorphism) {
 	case 1:
-		k.ModMulK1order(&lambda);
-		if (startPubKeySpecified) sp.x.ModMulK1(&beta);
+		k.ModMulK1order(lambda);
+		if (startPubKeySpecified) sp.x.ModMulK1(beta);
 		break;
 	case 2:
-		k.ModMulK1order(&lambda2);
-		if (startPubKeySpecified) sp.x.ModMulK1(&beta2);
+		k.ModMulK1order(lambda2);
+		if (startPubKeySpecified) sp.x.ModMulK1(beta2);
 		break;
 	}
 
 	// Check addresses
-	Point p = secp->ComputePublicKey(&k);
-	if (startPubKeySpecified) p = secp->AddDirect(p, sp);
+	Point p = Secp256K1::ComputePublicKey(k);
+	if (startPubKeySpecified) p = Secp256K1::AddDirect(p, sp);
 
-	string chkAddr = secp->GetAddress(searchType, mode, p);
+	string chkAddr = Secp256K1::GetAddress(searchType, mode, p);
 	if (chkAddr != addr) {
 
 		//Key may be the opposite one (negative zero or compressed key)
 		k.Neg();
-		k.Add(&secp->order);
-		p = secp->ComputePublicKey(&k);
+		k.Add(Secp256K1::order);
+		p = Secp256K1::ComputePublicKey(k);
 		if (startPubKeySpecified) {
 			sp.y.ModNeg();
-			p = secp->AddDirect(p, sp);
+			p = Secp256K1::AddDirect(p, sp);
 		}
-		string chkAddr = secp->GetAddress(searchType, mode, p);
+		string chkAddr = Secp256K1::GetAddress(searchType, mode, p);
 		if (chkAddr != addr) {
 			printf("\nWarning, wrong private key generated !\n");
 			printf("  Addr :%s\n", addr.c_str());
@@ -897,7 +896,7 @@ bool VanitySearch::checkPrivKey(string addr, const Int& key, int32_t incr, int e
 
 	}
 
-	output(addr, secp->GetPrivAddress(mode, k), p.toString(), k.GetBase16());
+	output(addr, Secp256K1::GetPrivAddress(mode, k), p.toString(), k.GetBase16());
 
 	return true;
 
@@ -907,7 +906,7 @@ void VanitySearch::checkAddrSSE(uint8_t* h1, uint8_t* h2, uint8_t* h3, uint8_t* 
 	int32_t incr1, int32_t incr2, int32_t incr3, int32_t incr4,
 	Int& key, int endomorphism, bool mode) {
 
-	vector<string> addr = secp->GetAddress(searchType, mode, h1, h2, h3, h4);
+	vector<string> addr = Secp256K1::GetAddress(searchType, mode, h1, h2, h3, h4);
 
 	for (int i = 0; i < (int)inputPrefixes.size(); i++) {
 
@@ -994,7 +993,7 @@ void VanitySearch::checkPubKey(int pi, const Int& key, int32_t incr, int endomor
 		PREFIX_ITEM* preitm = &(*prefixes[pi].items)[i];
 		if(pubKeyCompare(pt, preitm->pubkey, preitm->pubkeylen))
 		{
-			if (checkPrivKey(secp->GetAddress(P2PKH, false, pt), key, incr, endomorphism, false))
+			if (checkPrivKey(Secp256K1::GetAddress(P2PKH, false, pt), key, incr, endomorphism, false))
 			{
 				nbFoundKey++;
 				updateFound();
@@ -1008,7 +1007,7 @@ void VanitySearch::checkAddr(int prefIdx, uint8_t* hash160, Int& key, int32_t in
 	if (hasPattern) {
 
 		// Wildcard search
-		string addr = secp->GetAddress(searchType, mode, hash160);
+		string addr = Secp256K1::GetAddress(searchType, mode, hash160);
 
 		for (int i = 0; i < (int)inputPrefixes.size(); i++) {
 
@@ -1045,7 +1044,7 @@ void VanitySearch::checkAddr(int prefIdx, uint8_t* hash160, Int& key, int32_t in
 				// Found it !
 				*((*pi)[i].found) = true;
 				// You believe it ?
-				if (checkPrivKey(secp->GetAddress(searchType, mode, hash160), key, incr, endomorphism, mode)) {
+				if (checkPrivKey(Secp256K1::GetAddress(searchType, mode, hash160), key, incr, endomorphism, mode)) {
 					nbFoundKey++;
 					updateFound();
 				}
@@ -1060,7 +1059,7 @@ void VanitySearch::checkAddr(int prefIdx, uint8_t* hash160, Int& key, int32_t in
 
 		char a[64];
 
-		string addr = secp->GetAddress(searchType, mode, hash160);
+		string addr = Secp256K1::GetAddress(searchType, mode, hash160);
 
 		for (int i = 0; i < (int)pi->size(); i++) {
 
@@ -1118,26 +1117,26 @@ void VanitySearch::checkAddresses(bool compressed, Int key, int i, Point p1) {
 	Point pte2[1];
 
 	// Point
-	secp->GetHash160(searchType, compressed, p1, h0);
+	Secp256K1::GetHash160(searchType, compressed, p1, h0);
 	prefix_t pr0 = *(prefix_t*)h0;
 	if (hasPattern || prefixes[pr0].items)
 		checkAddr(pr0, h0, key, i, 0, compressed);
 
 	// Endomorphism #1
-	pte1[0].x.ModMulK1(&p1.x, &beta);
-	pte1[0].y.Set(&p1.y);
+	pte1[0].x.ModMulK1(p1.x, beta);
+	pte1[0].y.Set(p1.y);
 
-	secp->GetHash160(searchType, compressed, pte1[0], h0);
+	Secp256K1::GetHash160(searchType, compressed, pte1[0], h0);
 
 	pr0 = *(prefix_t*)h0;
 	if (hasPattern || prefixes[pr0].items)
 		checkAddr(pr0, h0, key, i, 1, compressed);
 
 	// Endomorphism #2
-	pte2[0].x.ModMulK1(&p1.x, &beta2);
-	pte2[0].y.Set(&p1.y);
+	pte2[0].x.ModMulK1(p1.x, beta2);
+	pte2[0].y.Set(p1.y);
 
-	secp->GetHash160(searchType, compressed, pte2[0], h0);
+	Secp256K1::GetHash160(searchType, compressed, pte2[0], h0);
 
 	pr0 = *(prefix_t*)h0;
 	if (hasPattern || prefixes[pr0].items)
@@ -1146,7 +1145,7 @@ void VanitySearch::checkAddresses(bool compressed, Int key, int i, Point p1) {
 	// Curve symetrie
 	// if (x,y) = k*G, then (x, -y) is -k*G
 	p1.y.ModNeg();
-	secp->GetHash160(searchType, compressed, p1, h0);
+	Secp256K1::GetHash160(searchType, compressed, p1, h0);
 	pr0 = *(prefix_t*)h0;
 	if (hasPattern || prefixes[pr0].items)
 		checkAddr(pr0, h0, key, -i, 0, compressed);
@@ -1154,7 +1153,7 @@ void VanitySearch::checkAddresses(bool compressed, Int key, int i, Point p1) {
 	// Endomorphism #1
 	pte1[0].y.ModNeg();
 
-	secp->GetHash160(searchType, compressed, pte1[0], h0);
+	Secp256K1::GetHash160(searchType, compressed, pte1[0], h0);
 
 	pr0 = *(prefix_t*)h0;
 	if (hasPattern || prefixes[pr0].items)
@@ -1163,7 +1162,7 @@ void VanitySearch::checkAddresses(bool compressed, Int key, int i, Point p1) {
 	// Endomorphism #2
 	pte2[0].y.ModNeg();
 
-	secp->GetHash160(searchType, compressed, pte2[0], h0);
+	Secp256K1::GetHash160(searchType, compressed, pte2[0], h0);
 
 	pr0 = *(prefix_t*)h0;
 	if (hasPattern || prefixes[pr0].items)
@@ -1210,7 +1209,7 @@ void VanitySearch::checkAddressesSSE(bool compressed, Int key, int i, Point p1, 
 	prefix_t pr3;
 
 	// Point -------------------------------------------------------------------------
-	secp->GetHash160(searchType, compressed, p1, p2, p3, p4, h0, h1, h2, h3);
+	Secp256K1::GetHash160(searchType, compressed, p1, p2, p3, p4, h0, h1, h2, h3);
 
 	if (!hasPattern) {
 
@@ -1237,16 +1236,16 @@ void VanitySearch::checkAddressesSSE(bool compressed, Int key, int i, Point p1, 
 
 	// Endomorphism #1
 	// if (x, y) = k * G, then (beta*x, y) = lambda*k*G
-	pte1[0].x.ModMulK1(&p1.x, &beta);
-	pte1[0].y.Set(&p1.y);
-	pte1[1].x.ModMulK1(&p2.x, &beta);
-	pte1[1].y.Set(&p2.y);
-	pte1[2].x.ModMulK1(&p3.x, &beta);
-	pte1[2].y.Set(&p3.y);
-	pte1[3].x.ModMulK1(&p4.x, &beta);
-	pte1[3].y.Set(&p4.y);
+	pte1[0].x.ModMulK1(p1.x, beta);
+	pte1[0].y.Set(p1.y);
+	pte1[1].x.ModMulK1(p2.x, beta);
+	pte1[1].y.Set(p2.y);
+	pte1[2].x.ModMulK1(p3.x, beta);
+	pte1[2].y.Set(p3.y);
+	pte1[3].x.ModMulK1(p4.x, beta);
+	pte1[3].y.Set(p4.y);
 
-	secp->GetHash160(searchType, compressed, pte1[0], pte1[1], pte1[2], pte1[3], h0, h1, h2, h3);
+	Secp256K1::GetHash160(searchType, compressed, pte1[0], pte1[1], pte1[2], pte1[3], h0, h1, h2, h3);
 
 	if (!hasPattern) {
 
@@ -1273,16 +1272,16 @@ void VanitySearch::checkAddressesSSE(bool compressed, Int key, int i, Point p1, 
 
 	// Endomorphism #2
 	// if (x, y) = k * G, then (beta2*x, y) = lambda2*k*G
-	pte2[0].x.ModMulK1(&p1.x, &beta2);
-	pte2[0].y.Set(&p1.y);
-	pte2[1].x.ModMulK1(&p2.x, &beta2);
-	pte2[1].y.Set(&p2.y);
-	pte2[2].x.ModMulK1(&p3.x, &beta2);
-	pte2[2].y.Set(&p3.y);
-	pte2[3].x.ModMulK1(&p4.x, &beta2);
-	pte2[3].y.Set(&p4.y);
+	pte2[0].x.ModMulK1(p1.x, beta2);
+	pte2[0].y.Set(p1.y);
+	pte2[1].x.ModMulK1(p2.x, beta2);
+	pte2[1].y.Set(p2.y);
+	pte2[2].x.ModMulK1(p3.x, beta2);
+	pte2[2].y.Set(p3.y);
+	pte2[3].x.ModMulK1(p4.x, beta2);
+	pte2[3].y.Set(p4.y);
 
-	secp->GetHash160(searchType, compressed, pte2[0], pte2[1], pte2[2], pte2[3], h0, h1, h2, h3);
+	Secp256K1::GetHash160(searchType, compressed, pte2[0], pte2[1], pte2[2], pte2[3], h0, h1, h2, h3);
 
 	if (!hasPattern) {
 
@@ -1315,7 +1314,7 @@ void VanitySearch::checkAddressesSSE(bool compressed, Int key, int i, Point p1, 
 	p3.y.ModNeg();
 	p4.y.ModNeg();
 
-	secp->GetHash160(searchType, compressed, p1, p2, p3, p4, h0, h1, h2, h3);
+	Secp256K1::GetHash160(searchType, compressed, p1, p2, p3, p4, h0, h1, h2, h3);
 
 	if (!hasPattern) {
 
@@ -1348,7 +1347,7 @@ void VanitySearch::checkAddressesSSE(bool compressed, Int key, int i, Point p1, 
 	pte1[3].y.ModNeg();
 
 
-	secp->GetHash160(searchType, compressed, pte1[0], pte1[1], pte1[2], pte1[3], h0, h1, h2, h3);
+	Secp256K1::GetHash160(searchType, compressed, pte1[0], pte1[1], pte1[2], pte1[3], h0, h1, h2, h3);
 
 	if (!hasPattern) {
 
@@ -1380,7 +1379,7 @@ void VanitySearch::checkAddressesSSE(bool compressed, Int key, int i, Point p1, 
 	pte2[2].y.ModNeg();
 	pte2[3].y.ModNeg();
 
-	secp->GetHash160(searchType, compressed, pte2[0], pte2[1], pte2[2], pte2[3], h0, h1, h2, h3);
+	Secp256K1::GetHash160(searchType, compressed, pte2[0], pte2[1], pte2[2], pte2[3], h0, h1, h2, h3);
 
 	if (!hasPattern) {
 
@@ -1416,16 +1415,16 @@ void VanitySearch::getCPUStartingKey(int thId, Int & key, Point & startP) {
 	else {
 		//Int one((uint64_t)1);
 		//key.Set(&one);
-		key.Set(&startKey);
+		key.Set(startKey);
 		Int off((int64_t)thId);
 		off.ShiftL(64);
-		key.Add(&off);
+		key.Add(off);
 	}
-	Int km(&key);
+	Int km(key);
 	km.Add((uint64_t)CPU_GRP_SIZE / 2);
-	startP = secp->ComputePublicKey(&km);
+	startP = Secp256K1::ComputePublicKey(km);
 	if (startPubKeySpecified)
-		startP = secp->AddDirect(startP, startPubKey);
+		startP = Secp256K1::AddDirect(startP, startPubKey);
 
 }
 
@@ -1469,10 +1468,10 @@ void VanitySearch::FindKeyCPU(TH_PARAM * ph) {
 		int hLength = (CPU_GRP_SIZE / 2 - 1);
 
 		for (i = 0; i < hLength; i++) {
-			dx[i].ModSub(&Gn[i].x, &startP.x);
+			dx[i].ModSub(Gn[i].x, startP.x);
 		}
-		dx[i].ModSub(&Gn[i].x, &startP.x);  // For the first point
-		dx[i + 1].ModSub(&_2Gn.x, &startP.x); // For the next center point
+		dx[i].ModSub(Gn[i].x, startP.x);  // For the first point
+		dx[i + 1].ModSub(_2Gn.x, startP.x); // For the next center point
 
 		// Grouped ModInv
 		grp->ModInv();
@@ -1489,34 +1488,34 @@ void VanitySearch::FindKeyCPU(TH_PARAM * ph) {
 			pn = startP;
 
 			// P = startP + i*G
-			dy.ModSub(&Gn[i].y, &pp.y);
+			dy.ModSub(Gn[i].y, pp.y);
 
-			_s.ModMulK1(&dy, &dx[i]);       // s = (p2.y-p1.y)*inverse(p2.x-p1.x);
-			_p.ModSquareK1(&_s);            // _p = pow2(s)
+			_s.ModMulK1(dy, dx[i]);       // s = (p2.y-p1.y)*inverse(p2.x-p1.x);
+			_p.ModSquareK1(_s);            // _p = pow2(s)
 
 			pp.x.ModNeg();
-			pp.x.ModAdd(&_p);
-			pp.x.ModSub(&Gn[i].x);           // rx = pow2(s) - p1.x - p2.x;
+			pp.x.ModAdd(_p);
+			pp.x.ModSub(Gn[i].x);           // rx = pow2(s) - p1.x - p2.x;
 
-			pp.y.ModSub(&Gn[i].x, &pp.x);
-			pp.y.ModMulK1(&_s);
-			pp.y.ModSub(&Gn[i].y);           // ry = - p2.y - s*(ret.x-p2.x);
+			pp.y.ModSub(Gn[i].x, pp.x);
+			pp.y.ModMulK1(_s);
+			pp.y.ModSub(Gn[i].y);           // ry = - p2.y - s*(ret.x-p2.x);
 
 			// P = startP - i*G  , if (x,y) = i*G then (x,-y) = -i*G
-			dyn.Set(&Gn[i].y);
+			dyn.Set(Gn[i].y);
 			dyn.ModNeg();
-			dyn.ModSub(&pn.y);
+			dyn.ModSub(pn.y);
 
-			_s.ModMulK1(&dyn, &dx[i]);      // s = (p2.y-p1.y)*inverse(p2.x-p1.x);
-			_p.ModSquareK1(&_s);            // _p = pow2(s)
+			_s.ModMulK1(dyn, dx[i]);      // s = (p2.y-p1.y)*inverse(p2.x-p1.x);
+			_p.ModSquareK1(_s);            // _p = pow2(s)
 
 			pn.x.ModNeg();
-			pn.x.ModAdd(&_p);
-			pn.x.ModSub(&Gn[i].x);          // rx = pow2(s) - p1.x - p2.x;
+			pn.x.ModAdd(_p);
+			pn.x.ModSub(Gn[i].x);          // rx = pow2(s) - p1.x - p2.x;
 
-			pn.y.ModSub(&Gn[i].x, &pn.x);
-			pn.y.ModMulK1(&_s);
-			pn.y.ModAdd(&Gn[i].y);          // ry = - p2.y - s*(ret.x-p2.x);
+			pn.y.ModSub(Gn[i].x, pn.x);
+			pn.y.ModMulK1(_s);
+			pn.y.ModAdd(Gn[i].y);          // ry = - p2.y - s*(ret.x-p2.x);
 
 			pts[CPU_GRP_SIZE / 2 + (i + 1)] = pp;
 			pts[CPU_GRP_SIZE / 2 - (i + 1)] = pn;
@@ -1525,37 +1524,37 @@ void VanitySearch::FindKeyCPU(TH_PARAM * ph) {
 
 		// First point (startP - (GRP_SZIE/2)*G)
 		pn = startP;
-		dyn.Set(&Gn[i].y);
+		dyn.Set(Gn[i].y);
 		dyn.ModNeg();
-		dyn.ModSub(&pn.y);
+		dyn.ModSub(pn.y);
 
-		_s.ModMulK1(&dyn, &dx[i]);
-		_p.ModSquareK1(&_s);
+		_s.ModMulK1(dyn, dx[i]);
+		_p.ModSquareK1(_s);
 
 		pn.x.ModNeg();
-		pn.x.ModAdd(&_p);
-		pn.x.ModSub(&Gn[i].x);
+		pn.x.ModAdd(_p);
+		pn.x.ModSub(Gn[i].x);
 
-		pn.y.ModSub(&Gn[i].x, &pn.x);
-		pn.y.ModMulK1(&_s);
-		pn.y.ModAdd(&Gn[i].y);
+		pn.y.ModSub(Gn[i].x, pn.x);
+		pn.y.ModMulK1(_s);
+		pn.y.ModAdd(Gn[i].y);
 
 		pts[0] = pn;
 
 		// Next start point (startP + GRP_SIZE*G)
 		pp = startP;
-		dy.ModSub(&_2Gn.y, &pp.y);
+		dy.ModSub(_2Gn.y, pp.y);
 
-		_s.ModMulK1(&dy, &dx[i + 1]);
-		_p.ModSquareK1(&_s);
+		_s.ModMulK1(dy, dx[i + 1]);
+		_p.ModSquareK1(_s);
 
 		pp.x.ModNeg();
-		pp.x.ModAdd(&_p);
-		pp.x.ModSub(&_2Gn.x);
+		pp.x.ModAdd(_p);
+		pp.x.ModSub(_2Gn.x);
 
-		pp.y.ModSub(&_2Gn.x, &pp.x);
-		pp.y.ModMulK1(&_s);
-		pp.y.ModSub(&_2Gn.y);
+		pp.y.ModSub(_2Gn.x, pp.x);
+		pp.y.ModMulK1(_s);
+		pp.y.ModSub(_2Gn.y);
 		startP = pp;
 
 #if 0
@@ -1641,20 +1640,20 @@ void VanitySearch::getGPUStartingKeys(int thId, int groupSize, int nbThread, Int
 			keys[i].Rand(256);
 		}
 		else {
-			keys[i].Set(&startKey);
+			keys[i].Set(startKey);
 			Int offT((uint64_t)i);
 			offT.ShiftL(80);
 			Int offG((uint64_t)thId);
 			offG.ShiftL(112);
-			keys[i].Add(&offT);
-			keys[i].Add(&offG);
+			keys[i].Add(offT);
+			keys[i].Add(offG);
 		}
-		Int k(keys + i);
+		Int k(keys[i]);
 		// Starting key is at the middle of the group
 		k.Add((uint64_t)(groupSize / 2));
-		p[i] = secp->ComputePublicKey(&k);
+		p[i] = Secp256K1::ComputePublicKey(k);
 		if (startPubKeySpecified)
-			p[i] = secp->AddDirect(p[i], startPubKey);
+			p[i] = Secp256K1::AddDirect(p[i], startPubKey);
 	}
 
 }

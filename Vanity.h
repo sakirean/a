@@ -73,9 +73,7 @@ class VanitySearch {
 
 public:
 
-	VanitySearch(Secp256K1* secp, std::vector<std::string>& prefix, std::string seed, int searchMode,
-		bool useGpu, bool stop, std::string outputFile, bool useSSE, uint32_t maxFound, uint64_t rekey,
-		bool caseSensitive, const Point& startPubKey, bool paranoiacSeed, const Int& startKey);
+	VanitySearch(std::vector<std::string>& prefix, std::string seed, int searchMode, bool useGpu, bool stop, std::string outputFile, bool useSSE, uint32_t maxFound, uint64_t rekey, bool caseSensitive, const Point& startPubKey, bool paranoiacSeed, const Int& startKey);
 
 	void Search(int nbThread, std::vector<int> gpuId, std::vector<int> gridSize);
 	void FindKeyCPU(TH_PARAM* p);
@@ -108,7 +106,6 @@ private:
 	void enumCaseUnsentivePrefix(std::string s, std::vector<std::string>& list);
 	bool prefixMatch(char* prefix, char* addr);
 
-	Secp256K1* secp;
 	Int startKey;
 	Point startPubKey;
 	bool startPubKeySpecified;
