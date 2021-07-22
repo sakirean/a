@@ -175,7 +175,7 @@ void Int::DivStep62(const Int& u, const Int& v, int64_t* eta, int* pos, int64_t*
 
 	while (true) {
 
-		int zeros = TZC(v0 | (UINT64_MAX << bitCount));
+		int zeros = TZCFP(v0 | (UINT64_MAX << bitCount));
 		v0 >>= zeros;
 		_u = _mm_slli_epi64(_u, (int)zeros);
 		bitCount -= zeros;
@@ -231,7 +231,7 @@ void Int::DivStep62(const Int& u, const Int& v, int64_t* eta, int* pos, int64_t*
 	}
 	else
 	{
-		uint64_t s = LZC(u.bits64[*pos] | v.bits64[*pos]);
+		uint64_t s = LZCFP(u.bits64[*pos] | v.bits64[*pos]);
 		if (s == 0)
 		{
 			uh = u.bits64[*pos];
@@ -265,7 +265,7 @@ void Int::DivStep62(const Int& u, const Int& v, int64_t* eta, int* pos, int64_t*
 	while (true)
 	{
 		// Use a sentinel bit to count zeros only up to bitCount
-		uint64_t zeros = TZC(v0 | 1ULL << bitCount);
+		uint64_t zeros = TZCFP(v0 | 1ULL << bitCount);
 		vh >>= zeros;
 		v0 >>= zeros;
 		_u = _mm_slli_epi64(_u, (int)zeros);
@@ -320,7 +320,7 @@ void Int::DivStep62(const Int& u, const Int& v, int64_t* eta, int* pos, int64_t*
 	while (true)
 	{
 		// Use a sentinel bit to count zeros only up to bitCount
-		int zeros = TZC(v0 | (1ULL << bitCount));
+		int zeros = TZCFP(v0 | (1ULL << bitCount));
 
 		v0 >>= zeros;
 		*uu <<= zeros;

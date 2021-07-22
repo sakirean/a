@@ -264,7 +264,15 @@ public:
 
 private:
 	static Int factorials[68];
-	static bool lzcntSupported;
+
+	static unsigned __int64 (*LZCFP)(unsigned __int64);
+	static unsigned __int64 (*TZCFP)(unsigned __int64);
+
+	static unsigned __int64 _LZC(unsigned __int64 i);
+	static unsigned __int64 _BSR(unsigned __int64 i);
+
+	static unsigned __int64 _TZC(unsigned __int64 i);
+	static unsigned __int64 _BSF(unsigned __int64 i);
 
 	static void MatrixVecMul(Int& u, Int& v, int64_t _11, int64_t _12, int64_t _21, int64_t _22, uint64_t* cu, uint64_t* cv);
 	static void MatrixVecMul(Int& u, Int& v, int64_t _11, int64_t _12, int64_t _21, int64_t _22);

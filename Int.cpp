@@ -28,13 +28,13 @@
 Int Int::one((uint64_t)1);
 Int Int::zero((uint64_t)0);
 Int Int::factorials[68] = { 0 };
-
-bool Int::lzcntSupported = false;
+unsigned __int64 (*Int::LZCFP)(unsigned __int64) = 0;
+unsigned __int64 (*Int::TZCFP)(unsigned __int64) = 0;
 
 void Int::Init()
 {
 	// Check lzcnt support
-	lzcntSupported = false;
+	bool lzcntSupported = false;
 	int cpuiddata[4];
 	__cpuid(cpuiddata, 0x80000000);
 	int numExtIds = cpuiddata[0];
@@ -42,6 +42,34 @@ void Int::Init()
 	{
 		__cpuidex(cpuiddata, 0x80000001, 0);
 		lzcntSupported = ((cpuiddata[2] >> 4) & 0x00000001) == 1;
+	}
+
+	if (lzcntSupported)
+	{
+		LZCFP = _LZC;
+	}
+	else
+	{
+		LZCFP = _BSR;
+	}
+
+	// Check tzcnt support
+	bool tzcntSupported = false;
+	__cpuid(cpuiddata, 0x00000000);
+	int numIds = cpuiddata[0];
+	if (numIds >= 7)
+	{
+		__cpuidex(cpuiddata, 7, 0);
+		tzcntSupported = ((cpuiddata[1] >> 3) & 0x00000001) == 1;
+	}
+
+	if (tzcntSupported)
+	{
+		TZCFP = _TZC;
+	}
+	else
+	{
+		TZCFP = _BSF;
 	}
 }
 
@@ -513,6 +541,37 @@ void Int::AddAndShift(const Int& a, const Int& b, uint64_t cH)
 	c = _addcarry_u64(c, b.bits64[8], a.bits64[8], bits64 + 7);
 #endif
 	bits64[NB64BLOCK - 1] = c + cH;
+}
+
+
+inline unsigned __int64 Int::_LZC(unsigned __int64 i)
+{
+	return LZC(i);
+}
+
+inline unsigned __int64 Int::_BSR(unsigned __int64 i)
+{
+	unsigned long idx = 0;
+	if (_BitScanReverse64(&idx, i) == 1)
+	{
+		return 64ul - (idx + 1);
+	}
+	return 64;
+}
+
+inline unsigned __int64 Int::_TZC(unsigned __int64 i)
+{
+	return TZC(i);
+}
+
+inline unsigned __int64 Int::_BSF(unsigned __int64 i)
+{
+	unsigned long idx = 0;
+	if (_BitScanForward64(&idx, i) == 1)
+	{
+		return idx;
+	}
+	return 64;
 }
 
 // ------------------------------------------------
@@ -1304,16 +1363,7 @@ int Int::GetBitLength() const
 	{
 		return 0;
 	}
-	if (lzcntSupported)
-	{
-		return (int)((64 - LZC(t.bits64[i])) + i * 64);
-	}
-	else
-	{
-		unsigned long idx = 0;
-		_BitScanReverse64(&idx, t.bits64[i]);
-		return idx + 1 + i * 64;
-	}
+	return (int)((64 - LZCFP(t.bits64[i])) + i * 64);
 }
 
 // ------------------------------------------------
@@ -1483,16 +1533,7 @@ void Int::Div(const Int& a, Int* mod)
 
 	// D1 normalize the divisor (d!=0)
 	uint32_t shift;
-	if (lzcntSupported)
-	{
-		shift = (uint32_t)LZC(d.bits64[dSize - 1]);
-	}
-	else
-	{
-		unsigned long idx = 0;
-		_BitScanReverse64(&idx, d.bits64[dSize - 1]);
-		shift = 64 - (idx + 1);
-	}
+	shift = (uint32_t)LZCFP(d.bits64[dSize - 1]);
 
 	d.ShiftL(shift);
 	rem.ShiftL(shift);

@@ -375,13 +375,6 @@ void reconstructAdd(string fileName, string outputFile, string privAddr) {
 
 int main(int argc, char* argv[]) {
 
-	unsigned long mask = 4369;
-	unsigned long index1, index2;
-	unsigned char isNonzero1, isNonzero2;
-	isNonzero1 = _BitScanReverse(&index1, mask);
-	isNonzero2 = _BitScanForward(&index2, mask);
-	
-
 	// Global Init
 	Timer::Init();
 	rseed(Timer::getSeed32());
