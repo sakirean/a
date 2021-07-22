@@ -24,7 +24,7 @@
 #define MODINV_DRS62		3	// ~780 kOps/s
 
 #define MODINVP_ALGO MODINV_DRS62
-#define MODINVO_ALGO MODINV_XCD
+#define MODINVO_ALGO MODINV_DRS62
 
 #define DSR62_OLD		1
 #define DSR62_PORIN		2
@@ -41,8 +41,7 @@ static Int _R2;				// Montgomery multiplication R2
 static Int _R3;				// Montgomery multiplication R3
 static Int _R4;				// Montgomery multiplication R4
 static int32_t Msize;		// Montgomery mult size
-static uint32_t MM32;		// 32bits lsb negative inverse of P
-static uint64_t MM64;		// 64bits lsb negative inverse of P
+static uint64_t MM64p;		// 64bits lsb negative inverse of P
 #define MSK62  0x3FFFFFFFFFFFFFFF
 
 void Int::ModAdd(const Int& a)
@@ -289,12 +288,12 @@ void Int::DivStep62(const Int& u, const Int& v, int64_t* eta, int* pos, int64_t*
 	}
 
 #ifdef WIN64
-	*uu = _u.m128i_u64[0];
+	* uu = _u.m128i_u64[0];
 	*uv = _u.m128i_u64[1];
 	*vu = _v.m128i_u64[0];
 	*vv = _v.m128i_u64[1];
 #else
-	*uu = ((int64_t*)&_u)[0];
+	* uu = ((int64_t*)&_u)[0];
 	*uv = ((int64_t*)&_u)[1];
 	*vu = ((int64_t*)&_v)[0];
 	*vv = ((int64_t*)&_v)[1];
@@ -499,7 +498,7 @@ void Int::ModInv()
 	uint64_t carryR;
 	while (k >= 64)
 	{
-		ML = r.bits64[0] * MM64;
+		ML = r.bits64[0] * MM64p;
 		imm_umul(_P.bits64, ML, s.bits64);
 		carryR = r.AddCh(&s, 0);
 		r.ShiftR64Bit();
@@ -509,7 +508,7 @@ void Int::ModInv()
 	if (k > 0)
 	{
 		uint64_t mask = (1ULL << k) - 1;
-		ML = (r.bits64[0] * MM64) & mask;
+		ML = (r.bits64[0] * MM64p) & mask;
 		imm_umul(_P.bits64, ML, s.bits64);
 		carryR = r.AddCh(&s, 0);
 		shiftR(k, r.bits64, carryR);
@@ -568,8 +567,8 @@ void Int::ModInv()
 		MatrixVecMul(r, s, uu, uv, vu, vv, &carryR, &carryS);
 
 		// Compute multiple of P to add to s and r to make them multiple of 2^62
-		uint64_t r0 = (r.bits64[0] * MM64) & MSK62;
-		uint64_t s0 = (s.bits64[0] * MM64) & MSK62;
+		uint64_t r0 = (r.bits64[0] * MM64p) & MSK62;
+		uint64_t s0 = (s.bits64[0] * MM64p) & MSK62;
 		r0_P.Mult(_P, r0);
 		s0_P.Mult(_P, s0);
 		carryR = r.AddCh(r0_P, carryR);
@@ -796,8 +795,7 @@ void Int::SetupField(const Int& n, Int* R, Int* R2, Int* R3, Int* R4)
 		x = x * (2 - t * x);
 		x = x * (2 - t * x);
 		x = x * (2 - t * x);
-		MM64 = (uint64_t)(-x);
-		MM32 = (uint32_t)MM64;
+		MM64p = (uint64_t)(-x);
 	}
 	_P.Set(n);
 
@@ -853,7 +851,7 @@ void Int::MontgomeryMult(const Int& a)
 
 	// i = 0
 	imm_umul((uint64_t*)a.bits64, bits64[0], pr.bits64);
-	ML = pr.bits64[0] * MM64;
+	ML = pr.bits64[0] * MM64p;
 	imm_umul(_P.bits64, ML, p.bits64);
 	c = pr.AddC(p);
 	memcpy(t.bits64, pr.bits64 + 1, 8 * (NB64BLOCK - 1));
@@ -862,7 +860,7 @@ void Int::MontgomeryMult(const Int& a)
 	for (int i = 1; i < Msize; i++)
 	{
 		imm_umul((uint64_t*)a.bits64, bits64[i], pr.bits64);
-		ML = (pr.bits64[0] + t.bits64[0]) * MM64;
+		ML = (pr.bits64[0] + t.bits64[0]) * MM64p;
 		imm_umul(_P.bits64, ML, p.bits64);
 		c = pr.AddC(p);
 		t.AddAndShift(t, pr, c);
@@ -892,7 +890,7 @@ void Int::MontgomeryMult(const Int& a, const Int& b)
 
 	// i = 0
 	imm_umul((uint64_t*)a.bits64, b.bits64[0], pr.bits64);
-	ML = pr.bits64[0] * MM64;
+	ML = pr.bits64[0] * MM64p;
 	imm_umul(_P.bits64, ML, p.bits64);
 	c = pr.AddC(p);
 	memcpy(bits64, pr.bits64 + 1, 8 * (NB64BLOCK - 1));
@@ -901,7 +899,7 @@ void Int::MontgomeryMult(const Int& a, const Int& b)
 	for (int i = 1; i < Msize; i++)
 	{
 		imm_umul((uint64_t*)a.bits64, b.bits64[i], pr.bits64);
-		ML = (pr.bits64[0] + bits64[0]) * MM64;
+		ML = (pr.bits64[0] + bits64[0]) * MM64p;
 		imm_umul(_P.bits64, ML, p.bits64);
 		c = pr.AddC(p);
 		AddAndShift(*this, pr, c);
@@ -1207,9 +1205,9 @@ void Int::ModSquareK1(const Int& a)
 
 }
 
-static Int _R2o;                               // R^2 for SecpK1 order modular mult
-static uint64_t MM64o = 0x4B0DFF665588B13FULL; // 64bits lsb negative inverse of SecpK1 order
-static const Int* _O;                                // SecpK1 order
+static Int _R2o;								// R^2 for SecpK1 order modular mult
+static uint64_t MM64o = 0x4B0DFF665588B13FULL;	// 64bits lsb negative inverse of SecpK1 order
+static const Int* _O;							// SecpK1 order
 
 void Int::InitK1(const Int& order)
 {
@@ -1443,7 +1441,7 @@ void Int::ModInvK1order()
 	uint64_t carryR;
 	while (k >= 64)
 	{
-		ML = r.bits64[0] * MM64;
+		ML = r.bits64[0] * MM64o;
 		imm_umul((uint64_t*)_O->bits64, ML, s.bits64);
 		carryR = r.AddCh(s, 0);
 		r.ShiftR64Bit();
@@ -1453,7 +1451,7 @@ void Int::ModInvK1order()
 	if (k > 0)
 	{
 		uint64_t mask = (1ULL << k) - 1;
-		ML = (r.bits64[0] * MM64) & mask;
+		ML = (r.bits64[0] * MM64o) & mask;
 		imm_umul((uint64_t*)_O->bits64, ML, s.bits64);
 		carryR = r.AddCh(s, 0);
 		shiftR(k, r.bits64, carryR);
@@ -1512,8 +1510,8 @@ void Int::ModInvK1order()
 		MatrixVecMul(r, s, uu, uv, vu, vv, &carryR, &carryS);
 
 		// Compute multiple of P to add to s and r to make them multiple of 2^62
-		uint64_t r0 = (r.bits64[0] * MM64) & MSK62;
-		uint64_t s0 = (s.bits64[0] * MM64) & MSK62;
+		uint64_t r0 = (r.bits64[0] * MM64o) & MSK62;
+		uint64_t s0 = (s.bits64[0] * MM64o) & MSK62;
 		r0_O.Mult(*_O, r0);
 		s0_O.Mult(*_O, s0);
 		carryR = r.AddCh(r0_O, carryR);
