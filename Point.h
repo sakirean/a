@@ -46,6 +46,7 @@ public:
 	void Double();
 	void Mul(const Int& s);
 	void Div(const Int& s);
+	void Neg();
 
 	void AddDirect(const Point& p);
 	void SubDirect(const Point& p);
@@ -60,7 +61,26 @@ public:
 
 	// Operators
 	bool operator==(const Point& r) const;
+	Point& operator++();
+	Point& operator--();
+	Point operator++(int);
+	Point operator--(int);
 
+	Point operator+(const Point& r) const;
+	Point operator-(const Point& r) const;
+
+	Point operator+() const;
+	Point operator-() const;
+
+	Point& operator+=(const Int& r);
+	Point& operator-=(const Int& r);
+	Point& operator+=(const Point& r);
+	Point& operator-=(const Point& r);
+
+	Point operator*(const Int& r) const;
+	Point operator/(const Int& r) const;
+	Point& operator*=(const Int& r);
+	Point& operator/=(const Int& r);
 };
 
 #endif // POINTH

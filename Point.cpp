@@ -275,6 +275,11 @@ void Point::Div(const Int& s)
 	Mul(sinv);
 }
 
+void Point::Neg()
+{
+	y.ModNeg();
+}
+
 void Point::AddDirect(const Point& p)
 {
 	Int _s;
@@ -392,4 +397,103 @@ void Point::DivDirect(const Int& s)
 bool Point::operator==(const Point& r) const
 {
 	return equals(r);
+}
+
+Point& Point::operator++()
+{
+	AddDirect(Secp256K1::G);
+	return *this;
+}
+
+Point& Point::operator--()
+{
+	SubDirect(Secp256K1::G);
+	return *this;
+}
+
+Point Point::operator++(int)
+{
+	return Secp256K1::NextKey(*this);
+}
+
+Point Point::operator--(int)
+{
+	return Secp256K1::PrevKey(*this);
+}
+
+
+Point Point::operator+(const Point& r) const
+{
+	Point p(*this);
+	p.AddDirect(r);
+	return p;
+}
+
+Point Point::operator-(const Point& r) const
+{
+	Point p(*this);
+	p.SubDirect(r);
+	return p;
+}
+
+Point Point::operator+() const
+{
+	return Point(*this);
+}
+
+Point Point::operator-() const
+{
+	Point p(*this);
+	p.Neg();
+	return p;
+}
+
+Point& Point::operator+=(const Int& r)
+{
+	AddDirect(Secp256K1::ComputePublicKey(r));
+	return *this;
+}
+
+Point& Point::operator-=(const Int& r)
+{
+	SubDirect(Secp256K1::ComputePublicKey(r));
+	return *this;
+}
+
+Point& Point::operator+=(const Point& r)
+{
+	AddDirect(r);
+	return *this;
+}
+
+Point& Point::operator-=(const Point& r)
+{
+	SubDirect(r);
+	return *this;
+}
+
+Point Point::operator*(const Int& r) const
+{
+	Point p(*this);
+	p.MulDirect(r);
+	return p;
+}
+
+Point Point::operator/(const Int& r) const
+{
+	Point p(*this);
+	p.DivDirect(r);
+	return p;
+}
+
+Point& Point::operator*=(const Int& r)
+{
+	MulDirect(r);
+	return *this;
+}
+
+Point& Point::operator/=(const Int& r)
+{
+	DivDirect(r);
+	return *this;
 }
