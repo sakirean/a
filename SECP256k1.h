@@ -77,11 +77,17 @@ public:
 	static Point MulDirect(const Point& p, const Int& s);
 	static Point DivDirect(const Point& p, const Int& s);
 
-	static Point G;						// Generator point
-	static Point halfG;					// Half of generator point
+	
 	static Int order;					// Curve order
 	static Int halfOrder;				// Half order
 	static Int prime;					// Prime
+	static Int beta1;
+	static Int lambda1;
+	static Int beta2;
+	static Int lambda2;
+
+	static Point G;						// Generator point
+	static Point halfG;					// Half of generator point
 	static Point GTable[256 * 32];		// Generator table
 
 	static Int GetY(Int x, bool isEven);

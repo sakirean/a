@@ -54,6 +54,12 @@ public:
 	void MulDirect(const Int& s);
 	void DivDirect(const Int& s);
 	
+	void RestoreY(bool yeven);
+
+	bool IsOnCurve() const;
+
+	Point GetEndomorphism1();
+	Point GetEndomorphism2();
 
 	Int x;
 	Int y;

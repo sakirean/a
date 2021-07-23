@@ -394,6 +394,58 @@ void Point::DivDirect(const Int& s)
 	MulDirect(sinv);
 }
 
+void Point::RestoreY(bool yeven)
+{
+	Int _s;
+	Int r;
+
+	_s.ModSquareK1(x);
+	r.ModMulK1(_s, x);
+	r.ModAdd(7);
+	r.ModSqrt();
+
+	if (!r.IsEven() && yeven)
+	{
+		r.ModNeg();
+	}
+	else if (r.IsEven() && !yeven)
+	{
+		r.ModNeg();
+	}
+
+	y = r;
+}
+
+bool Point::IsOnCurve() const
+{
+	Int _s;
+	Int _p;
+
+	_s.ModSquareK1(x);
+	_p.ModMulK1(_s, x);
+	_p.ModAdd(7);
+	_s.ModMulK1(y, y);
+	_s.ModSub(_p);
+
+	return _s.IsZero(); // ( ((pow2(y) - (pow3(x) + 7)) % P) == 0 );
+}
+
+Point Point::GetEndomorphism1()
+{
+	Point r;
+	r.x.ModMulK1(x, Secp256K1::beta1);
+	r.y.Set(y);
+	return r;
+}
+
+Point Point::GetEndomorphism2()
+{
+	Point r;
+	r.x.ModMulK1(x, Secp256K1::beta2);
+	r.y.Set(y);
+	return r;
+}
+
 bool Point::operator==(const Point& r) const
 {
 	return equals(r);

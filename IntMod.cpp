@@ -16,6 +16,7 @@
 */
 
 #include "Int.h"
+#include "SECP256k1.h"
 #include <emmintrin.h>
 #include <string.h>
 
@@ -1556,4 +1557,18 @@ void Int::ModInvK1order()
 	Set(r);
 #endif
 
+}
+
+Int Int::GetEndomorphism1()
+{
+	Int r(*this);
+	r.ModMulK1order(Secp256K1::lambda1);
+	return r;
+}
+
+Int Int::GetEndomorphism2()
+{
+	Int r(*this);
+	r.ModMulK1order(Secp256K1::lambda2);
+	return r;
 }

@@ -205,6 +205,8 @@ public:
 	void ModNegK1order();
 	uint32_t ModPositiveK1();
 	void ModInvK1order();								// this <- this^-1 (mod n)
+	Int GetEndomorphism1();
+	Int GetEndomorphism2();
 
 	// Size
 	int GetSize8() const;       // Number of significant 32bit limbs
