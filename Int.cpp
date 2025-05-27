@@ -1,20 +1,3 @@
-/*
- * This file is part of the BSGS distribution (https://github.com/JeanLucPons/VanitySearch).
- * Copyright (c) 2020 Jean Luc PONS.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, version 3.
- *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
-*/
-
 #include "Int.h"
 #include "IntGroup.h"
 #include <string.h>
@@ -28,8 +11,8 @@
 Int Int::one((uint64_t)1);
 Int Int::zero((uint64_t)0);
 Int Int::factorials[68] = { 0 };
-unsigned __int64 (*Int::LZCFP)(unsigned __int64) = 0;
-unsigned __int64 (*Int::TZCFP)(unsigned __int64) = 0;
+uint64_t (*Int::LZCFP)(uint64_t) = 0;
+uint64_t (*Int::LZCFP)(uint64_t) = 0;
 
 void Int::Init()
 {
@@ -544,12 +527,12 @@ void Int::AddAndShift(const Int& a, const Int& b, uint64_t cH)
 }
 
 
-inline unsigned __int64 Int::_LZC(unsigned __int64 i)
+inline uint64_t Int::_LZC(uint64_t i)
 {
 	return LZC(i);
 }
 
-inline unsigned __int64 Int::_BSR(unsigned __int64 i)
+inline uint64_t Int::_BSR(uint64_t i)
 {
 	unsigned long idx = 0;
 	if (_BitScanReverse64(&idx, i) == 1)
@@ -559,12 +542,12 @@ inline unsigned __int64 Int::_BSR(unsigned __int64 i)
 	return 64;
 }
 
-inline unsigned __int64 Int::_TZC(unsigned __int64 i)
+inline uint64_t Int::_TZC(uint64_t i)
 {
 	return TZC(i);
 }
 
-inline unsigned __int64 Int::_BSF(unsigned __int64 i)
+inline uint64_t Int::_BSF(uint64_t i)
 {
 	unsigned long idx = 0;
 	if (_BitScanForward64(&idx, i) == 1)
